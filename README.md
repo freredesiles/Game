@@ -1,2 +1,6 @@
 # Game
-This repository contains the games, Amusez vous bien :)
+This repository contains our games, Amusez vous bien :)
+
+# Nice project
+https://www.youtube.com/watch?v=05rEefXlmhI
+
