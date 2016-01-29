@@ -93,6 +93,8 @@ class Spells:
     def __init__(self):
 
         self.damage = 0
+        self.all_spells_type = {"Fire": Fire}
+        self.all_spells_level = {"Fire": Fire.fire_spells_level}
 
 
 class Fire(Spells, Player):
@@ -100,9 +102,12 @@ class Fire(Spells, Player):
     def __init__(self):
 
         Spells.__init__(self)
+        self.fire_spells = {"Fireball": self.fire_ball(int(), int())}
+        self.fire_spells_level = {"Fireball": 2}
 
     def fire_ball(self, hp_enemy, armor):
 
+        print(" Fireball !")
         self.damage = rd.randrange(15, 25+self.level, 1)
         self.damage = damage_reduction(armor, self.damage)
         print("{} damage dealt !".format(self.damage))
@@ -128,8 +133,10 @@ class Enemy:
 
     def __init__(self):
 
+        self.name = "Grobulus"
         self.HP = 50
         self.armor = 10
+        self.xp_reward = 50
 
     def attack(self, hp_target, armor):
 
@@ -140,10 +147,5 @@ class Enemy:
 
         return hp_target
 
-player = Mage("Mon gland frais")
-enemy = Enemy()
 
-enemy.HP = player.fire_ball(enemy.HP, enemy.armor)
-
-print(enemy.HP)
 
