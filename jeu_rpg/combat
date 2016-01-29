@@ -1,0 +1,26 @@
+import Game.classe as cl
+
+
+def check_spells(player_level, spells_level):
+    spells_usable = []
+
+    for spells in spells_level.keys():
+
+        if player_level >= spells_level[spells] :
+
+            spells_usable.append(spells)
+
+    for index, value in enumerate(spells_usable):
+
+        print(" {}- {}".format(index, value))
+
+
+def combat(enemy_name, enemy_hp, enemy_damage, player_hp, player_damage):
+
+    print("You are fighting vs {}".format(enemy_name))
+    print("You attack first !")
+
+player1 = cl.Player("Mon gland frais")
+player1.level = 5
+spells_lvl = cl.Spells()
+check_spells(player1.level, spells_lvl.spells_level)
