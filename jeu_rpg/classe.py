@@ -33,17 +33,15 @@ class Hero(Spells):
                 self.spells_usable[index] = spells
 
     def attack(self, spell_name, enemy_hp):
+        damage = self.classe[self.classe_chosen][spell_name][1]
 
-        self.damage = rd.randrange(self.classe[self.classe_chosen][spell_name][1] -
-                                   (int(10*self.classe[self.classe_chosen][spell_name][1])/100),
-                                   self.classe[self.classe_chosen][spell_name][1] +
-                                   (int(10*self.classe[self.classe_chosen][spell_name][1])/100), 1)
+        self.damage = rd.randrange(damage - (int(2*(damage/10))), damage + (int(2*(damage/10))), 1)
 
         print("{} damage dealt !".format(self.damage))
         enemy_hp -= self.damage
 
         return enemy_hp
-    
+
     def __str__(self):
 
         return "Pseudo: {}\nclasse: {}\nlevel: {}\nspells usable: {}".format(self.pseudo, self.classe_chosen, self.level
