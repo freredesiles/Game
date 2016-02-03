@@ -5,50 +5,53 @@ class Spells:
 
     def __init__(self):
 
-        self.mage_spells = {"Fireball": (3, 4)}  # (level, damage)
+        self.mage_spells = {"Fireball": (3, 40)}  # (level, damage)
         self.warlock_spells = {"ChaosShot": (2, 5)}
         self.warrior_spells = {"Strike": (3, 6)}
 
 
 class Hero(Spells):
 
-    def __init__(self, pseudo, classe):
+    def __init__(self, pseudo, clas):
 
         Spells.__init__(self)
-        self.damage = None
-        self.HP = 100
-        self.pseudo = pseudo
-        self.classe_chosen = classe
-        self.MP = 50
-        self.level = 4
-        self.classe = {"Mage": self.mage_spells, "Warlock": self.warlock_spells, "Warrior": self.warrior_spells}
+
+        self.caract = {"HP": 100, "pseudo": pseudo, "Profession": clas, "MP": 50, "level": 1, "armor": 10}
+        c = self.caract
+        self.classe = {"Mage": (self.mage_spells, c["HP"]-30, c["MP"]+20), "Warlock": (self.warlock_spells, c["HP"]-15,
+                                                                                       c["MP"]+20),
+                       "Warrior": (self.warrior_spells, c["HP"]+40, c.pop("MP"))}  # lorsque l'utilisateur fait un warrior je voudrais faire self.classe["Warrior"][3]
+
         self.spells_usable = {}
 
     def spells_available(self):
 
-        for index, spells in enumerate(self.classe[self.classe_chosen].keys()):
+        all_spells = self.classe[self.caract["Profession"]]
 
-            if self.level >= self.classe[self.classe_chosen][spells][0]:
+        for index, spells in enumerate(all_spells.keys()):
+
+            if self.caract["level"] >= all_spells[spells][0]:
 
                 self.spells_usable[index] = spells
 
-    def attack(self, spell_name, enemy_hp):
-        damage = self.classe[self.classe_chosen][spell_name][1]
+    def attack(self, spell_name, enemy1):
 
-        self.damage = rd.randrange(damage - (int(2*(damage/10))), damage + (int(2*(damage/10))), 1)
+        damage = self.classe[self.caract["Profession"]][spell_name][1]
+        damage = rd.randrange(damage - int(damage*0.2), damage + int(damage*0.2), 1)
+        print("{} damage dealt !".format(damage))
+        enemy1.defence(damage)
 
-        print("{} damage dealt !".format(self.damage))
-        enemy_hp -= self.damage
+    def defence(self, damage):
 
-        return enemy_hp
+        self.caract["HP"] -= damage
 
     def __str__(self):
 
-        return "Pseudo: {}\nclasse: {}\nlevel: {}\nspells usable: {}".format(self.pseudo, self.classe_chosen, self.level
-                                                                             , self.spells_usable.values())
+        return"{}".format(self.caract)
 
-player = Hero("Jean", "Mage")
-player.spells_available()
+player = Hero("Jean", "Warlock")
+enemy = Hero("Patrick", "Warlock")
+
 print(player)
 
 
