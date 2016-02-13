@@ -15,7 +15,9 @@ for i in range(51):
     panel[i+1] = dataframe_hero
 
 
-
+mage_spells = pd.read_csv("Mage_spells.csv")
+warrior_spells = pd.read_csv("Warrior_spells.csv")
+warlock_spells = pd.read_csv("Warlock_spells.csv")
 
 
 
