@@ -24,6 +24,23 @@ class Hero(Spells):
         self.classe = {"Mage": self.mage_spells, "Warlock": self.warlock_spells, "Warrior": self.warrior_spells}
         self.spells_usable = fc.spells_available(self.classe[self.hero["Classes"]], self.hero["Level"])
 
+    def create_enemy(self, hero_level):
+
+        del(self.hero, self.classe)
+
+        if hero_level <= 3:
+
+            level = rd.randrange(hero_level - 2, hero_level + 1)
+
+        else:
+
+            level = hero_level
+
+        hp = rd.randrange(80 + 0.2 * level * 10, 110 + 0.2 * level * 10)
+        mp = rd.randrange(30 + 0.2 * level * 10, 60 + 0.2 * level * 10)
+        armor = rd.randrange(20 + 0.2 * level * 10, 30 + 0.2 * level * 10)
+        self.stats = {"Level": level, "Pseudo": rd.choice(ma.list_name), "HP": hp, "MP": mp, "Armor": armor}
+
     def attack(self, spell_name, enemy1):
 
         damage = self.spells_usable[spell_name]["Damage"].values

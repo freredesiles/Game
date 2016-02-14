@@ -19,6 +19,8 @@ mage_spells = pd.read_csv("Mage_spells.csv")
 warrior_spells = pd.read_csv("Warrior_spells.csv")
 warlock_spells = pd.read_csv("Warlock_spells.csv")
 
+with open("name", "r") as all_name:
 
-
+    names = all_name.read()
+    list_name = names.split("\n")
 

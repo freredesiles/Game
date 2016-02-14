@@ -13,5 +13,6 @@ else:
 
     player = cl.Hero()
 
-
+enemy = cl.Hero()
+enemy.create_enemy(player.hero["Level"])
 
