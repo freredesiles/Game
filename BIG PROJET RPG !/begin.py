@@ -1,5 +1,5 @@
 import pygame as pg
-
+import all_class as ac
 
 def groupe_sprites_sheet_charact(data, y, sprite_size):
     groupe = pg.sprite.OrderedUpdates()
@@ -30,7 +30,8 @@ class Personnage:
         self.x = x
         self.y = y
 
-    def déplacement(self, groupe_dep, x=0, y=0):
+    def déplacement(self, groupe_dep, taillefenêtre, x=0, y=0):
+
         for sprite in groupe_dep:
             player.x += x
             player.y += y
@@ -59,7 +60,7 @@ monter = groupe_sprites_sheet_charact("image/Roman.png", 1, 32)
 droite = groupe_sprites_sheet_charact("image/Roman.png", 2, 32)
 gauche = groupe_sprites_sheet_charact("image/Roman.png", 3, 32)
 game_exit = True
-pg.key.set_repeat(20, 5)
+pg.key.set_repeat(20, 30)
 while game_exit:
     for event in pg.event.get():
 
@@ -70,19 +71,19 @@ while game_exit:
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_DOWN:
 
-                player.déplacement(descendre, y=5)
+                player.déplacement(descendre, taille_fenêtre, y=5)
 
             elif event.key == pg.K_UP:
 
-                player.déplacement(monter, y=-5)
+                player.déplacement(monter, taille_fenêtre, y=-5)
 
             elif event.key == pg.K_LEFT:
 
-                player.déplacement(gauche, x=-5)
+                player.déplacement(gauche, taille_fenêtre, x=-5)
 
             elif event.key == pg.K_RIGHT:
 
-                player.déplacement(droite, x=5)
+                player.déplacement(droite, taille_fenêtre, x=5)
 
 
 
