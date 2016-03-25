@@ -1,76 +1,145 @@
 import pygame as pg
-import Game.BIGPROJECTRPG.all_class as ac
+import manage as ma
+import fonctions as fc
+import all_class as ac
+import random as rd
+import time
 
-
-sprite_height = 64
-sprite_width = 32
 pg.init()
-taille_fenêtre = (1000, 800)
-screen = pg.display.set_mode(taille_fenêtre)  # Taille de la fenêtre
-player = ac.Personnage("image/Roman.png", sprite_height, sprite_width, 8, 256)
-game_exit = True
-game_menu = True
-play = ac.Contenu("Play", 60, (255, 255, 255), taille_fenêtre)
-options = ac.Contenu("Options", 60, (255, 255, 255), taille_fenêtre, y=50)
-quitter = ac.Contenu("Quit", 60, (255, 255, 255), taille_fenêtre, y=100)
-menu = [play, options, quitter]
+taille_fenêtre = (800, 400)
+screen_m = pg.display.set_mode(taille_fenêtre)
+player = ac.Player("/home/martin/Documents/gitproject/BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256)
+enemy = ac.Enemy("/home/martin/Documents/gitproject/BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256, posy=50)
+game = True
+gamemenu = True
+pg.key.set_repeat(20, 20)
+play = ac.Contenu("PLAY", 50, (255, 255, 255), taille_fenêtre)
+quitt = ac.Contenu("QUIT", 50, (255, 255, 255), taille_fenêtre, y=50)
+menu = [play, quitt]
+clock = pg.time.Clock()
 
-while game_menu:
+while gamemenu:
 
     for event in pg.event.get():
+        if event.type == pg.QUIT:
+            pg.quit()
+
         pos = pg.mouse.get_pos()
-        screen.fill((0, 0, 0))
+        screen_m.fill((0, 0, 0))
 
         for index in range(len(menu)):
 
             menu[index].collision(pos[0], pos[1], event)
             booléen = menu[index].surbrillance()
             m = menu[index]
-            screen.blit(m.text_render, m.rect)
+            screen_m.blit(m.text_render, m.rectt)
             m.rect = pg.Rect(m.x, m.y, m.size[0]+10, m.size[1]+10)
             pg.display.update(m.rect)
 
             if event.type == pg.MOUSEBUTTONDOWN:
+
                 if booléen:
-                    if index == 2 or event.type == pg.QUIT:
+                    if index == 1 or event.type == pg.QUIT:
+
                         pg.quit()
+
                     elif index == 0:
-                        game_menu = False
+
+                        gamemenu = False
 
         pg.event.clear()
-screen.fill((255, 255, 255))
+
+screen_m.fill((255, 255, 255))
 pg.display.flip()
-pg.key.set_repeat(20, 30)
 
-while game_exit:
 
-    for event in pg.event.get():
+while game:
+    enemy.y = 1
+    event = pg.event.poll()
 
-        if event.type == pg.QUIT:
+    if event.type == pg.QUIT:
 
-            game_exit = False
+        game = False
 
-        if event.type == pg.KEYDOWN:
+    if event.type == pg.KEYDOWN:
 
-            if event.key == pg.K_DOWN:
+        if event.key == pg.K_DOWN:
+            player.y = 5
+            player.key = pg.K_DOWN
+            player.update_character(screen_m, (255, 255, 255), 0)
 
-                player.déplacement(player.move[0], player, screen, sprite_width, sprite_height, y=5)
+        elif event.key == pg.K_UP:
 
-            elif event.key == pg.K_UP:
+            player.y = -5
+            player.key = pg.K_UP
+            player.update_character(screen_m, (255, 255, 255), 1)
 
-                player.déplacement(player.move[1], player, screen, sprite_width, sprite_height, y=-5)
+        elif event.key == pg.K_RIGHT:
+            player.x = 5
+            player.key = pg.K_RIGHT
+            player.update_character(screen_m, (255, 255, 255), 2)
 
-            elif event.key == pg.K_RIGHT:
+        elif event.key == pg.K_LEFT:
 
-                player.déplacement(player.move[2], player, screen, sprite_width, sprite_height, x=5)
+            player.x = -5
+            player.key = pg.K_LEFT
+            player.update_character(screen_m, (255, 255, 255), 3)
 
-            elif event.key == pg.K_LEFT:
+    elif event.type == pg.KEYUP:
 
-                player.déplacement(player.move[3], player, screen, sprite_width, sprite_height, x=-5)
-        if event.type == pg.MOUSEBUTTONDOWN:
+        player.index = player.nb_sprite - 1
 
-            player.stats["HP"] -= 5
+        if player.key == pg.K_DOWN:
 
-        player.hp_bar(screen)
+            player.update_character(screen_m, (255, 255, 255), 0)
+
+        elif player.key == pg.K_UP:
+
+            player.update_character(screen_m, (255, 255, 255), 1)
+
+        elif player.key == pg.K_RIGHT:
+
+            player.update_character(screen_m, (255, 255, 255), 2)
+
+        elif player.key == pg.K_LEFT:
+
+            player.update_character(screen_m, (255, 255, 255), 3)
+
+    # Update
+    enemy.update_character(screen_m, (255, 255, 25), 0)
+    pg.display.update(enemy.dirty_rect)
+    time.sleep(5)
+    pg.display.update(player.dirty_rect)
+    player.dirty_rect.clear()
+    enemy.dirty_rect.clear()
+    clock.tick(60)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

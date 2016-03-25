@@ -1,11 +1,12 @@
 import pickle as pk
 import pygame as pg
+import all_class as ac
 
 
 def save(level, pseudo, classe, gear, inventory):
 
     dic = {"Level": level, "Pseudo": pseudo, "Classes": classe, "Gear": gear, "Inventory": inventory}
-    with open("Hero_save", "wb") as save_it:
+    with open("/home/martin/Documents/gitproject/BIGPROJECTRPG/Hero_save", "wb") as save_it:
 
         saved = pk.Pickler(save_it)
         saved.dump(dic)
@@ -13,7 +14,7 @@ def save(level, pseudo, classe, gear, inventory):
 
 def load_hero():
 
-    with open("Hero_save", "rb") as load_it:
+    with open("/home/martin/Documents/gitproject/BIGPROJECTRPG/Hero_save", "rb") as load_it:
 
         loading = pk.Unpickler(load_it)
         load = loading.load()
@@ -45,27 +46,19 @@ def spells_available(df_spells, hero_level):
     return spells_usable
 
 
-def menu_départ(screen, background, color_font, font_size, write):
+def group_my_spritesheet(data, sprite_height, sprite_width, nb_sprite, sheet_size):
 
-    text = pg.font.Font(None, font_size)
-    text_write = text.render(write, 3, color_font)
-    surface_requise = text.size(write)
-    position = (screen.get_width()/2 - surface_requise[0]/2, screen.get_height()/2 - surface_requise[1]/2)
-    screen.fill(background)
-    screen.blit(text_write, position)
-    pg.display.flip()
+    list_group_sprite = []
 
+    for line in range(0, sheet_size, sprite_height):
+        groupe = []
 
-def update_sprite(posx, posy, rect_x, rect_y, dx=0, dy=0):
+        for sprite_lenght in range(0, (sprite_width*nb_sprite), sprite_width):
 
-    if dy > 0:
-        rect = (posx, posy-dy, rect_x, rect_y+dy)
-    elif dy < 0:
-        rect = (posx, posy, rect_x, rect_y-dy)
-    elif dx > 0:
-        rect = (posx-dx, posy, rect_x+dx, rect_y)
-    else:
-        rect = (posx, posy, rect_x-dx, rect_y)
+            sprite_load = ac.NewSprite(sprite_width, sprite_height)
+            sprite_load.sprite_from_sheet(data, sprite_lenght, line, sprite_width, sprite_height)
+            groupe.append(sprite_load)
 
-    return rect
+        list_group_sprite.append(groupe)
 
+    return list_group_sprite
