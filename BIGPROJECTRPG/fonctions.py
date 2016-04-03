@@ -1,6 +1,7 @@
 import pickle as pk
 import pygame as pg
 import all_class as ac
+import manage as ma
 
 
 def save(level, pseudo, classe, gear, inventory):
@@ -35,8 +36,15 @@ def new_character(all_classes):
     print("Welcome : " + pseudo + " as level 1 " + dict_classes[classes_chosen])
 
 
-def spells_available(df_spells, hero_level):
+def spells_available(role, hero_level):
     spells_usable = {}
+    if role == "Mage":
+        df_spells = ma.mage_spells
+    elif role == "Warrior":
+        df_spells = ma.warrior_spells
+    else:
+        df_spells = ma.warlock_spells
+
     for index in range(len(df_spells)):
 
         if df_spells["Level"][index] <= hero_level:
@@ -46,11 +54,11 @@ def spells_available(df_spells, hero_level):
     return spells_usable
 
 
-def group_my_spritesheet(data, sprite_height, sprite_width, nb_sprite, sheet_size):
+def group_my_spritesheet(data, sprite_height, sprite_width, nb_sprite, sheet_height):
 
     list_group_sprite = []
 
-    for line in range(0, sheet_size, sprite_height):
+    for line in range(0, sheet_height, sprite_height):
         groupe = []
 
         for sprite_lenght in range(0, (sprite_width*nb_sprite), sprite_width):

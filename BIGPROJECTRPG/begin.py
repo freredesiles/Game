@@ -4,12 +4,16 @@ import fonctions as fc
 import all_class as ac
 import random as rd
 import time
+import os
+
+os.chdir("/home/martin/Documents/gitproject")
 
 pg.init()
 taille_fenêtre = (800, 400)
 screen_m = pg.display.set_mode(taille_fenêtre)
-player = ac.Player("/home/martin/Documents/gitproject/BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256)
-enemy = ac.Enemy("/home/martin/Documents/gitproject/BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256, posy=50)
+player = ac.Player("BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256)
+enemy = ac.Enemy("BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256, posy=50)
+fireball = ac.Spell("BIGPROJECTRPG/image/Fireball.png", 16, 16, 6, 16)
 game = True
 gamemenu = True
 pg.key.set_repeat(20, 20)
@@ -54,7 +58,7 @@ pg.display.flip()
 
 
 while game:
-    enemy.y = 1
+
     event = pg.event.poll()
 
     if event.type == pg.QUIT:
@@ -85,6 +89,12 @@ while game:
             player.key = pg.K_LEFT
             player.update_character(screen_m, (255, 255, 255), 3)
 
+        elif event.key == pg.K_a:
+
+            fireball.x = 10
+            fireball.key = pg.K_a
+            player.cast_spell(fireball, screen_m)
+
     elif event.type == pg.KEYUP:
 
         player.index = player.nb_sprite - 1
@@ -105,13 +115,6 @@ while game:
 
             player.update_character(screen_m, (255, 255, 255), 3)
 
-    # Update
-    enemy.update_character(screen_m, (255, 255, 25), 0)
-    pg.display.update(enemy.dirty_rect)
-    time.sleep(5)
-    pg.display.update(player.dirty_rect)
-    player.dirty_rect.clear()
-    enemy.dirty_rect.clear()
     clock.tick(60)
 
 

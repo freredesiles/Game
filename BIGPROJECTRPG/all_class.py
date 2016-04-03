@@ -9,16 +9,53 @@ class NewSprite(pg.sprite.Sprite):
     def __init__(self, size_x, size_y, posx=0, posy=0, rect_x=0, rect_y=0):
 
         pg.sprite.Sprite.__init__(self)
-        self.rect = pg.Rect(posx, posy, rect_x, rect_y)  # Defini le rectangle ou positionner l'image
-        self.image = pg.Surface((size_x, size_y))  # Créer une surface rectangulaire
+        self.rect = pg.Rect(posx, posy, rect_x, rect_y)  # Initialise the rectangle location
+        self.image = pg.Surface((size_x, size_y))  # Initialise a rectangle Surface
+        self.x = 0  # Variable which change according to the key pressed +- 5 pixel
+        self.y = 0
+        self.posx = posx  # Current sprite position
+        self.posy = posy
+        self.sizex = size_x  # Sprite width
+        self.sizey = size_y
+        self.dirty_rect = []  # List of rectangle to update
+        self.index = 0
+        self.key = pg.key
 
     def sprite_from_sheet(self, data, x, y, sprite_wh, sprite_ht):
-
-        sheet = pg.image.load(data).convert()
+        sheet = pg.image.load(data).convert_alpha()
         rectangle = pg.Rect(x, y, sprite_wh, sprite_ht)  # Defini le rectangle ou chercher l'image & taille qu'il fait
         sheet.set_clip(rectangle)
         sheet.set_colorkey((255, 255, 255))
         self.image = sheet.subsurface(sheet.get_clip())
+
+    def update_sprite(self, screen, color, nb_sprite, group_sprite, i=0):
+
+        self.dirty_rect.append(self.rect)
+        screen.fill(color)
+        sprite = group_sprite[i][self.index]  # i = which group of sprite, self.index = current sprite's state
+        self.posx += self.x
+        self.posy += self.y
+        self.rect = pg.Rect(self.posx, self.posy, self.sizex, self.sizey)
+        screen.blit(sprite.image, self.rect)
+        self.dirty_rect.append(self.rect)
+        pg.display.update(self.dirty_rect)
+        self.dirty_rect.clear()
+        self.x = 0
+        self.y = 0
+        if self.index == nb_sprite-1:
+
+            self.index = 0
+        else:
+
+            self.index += 1
+
+
+class Spell(NewSprite):
+
+    def __init__(self, data, size_x, size_y, nb_sprite, sheetsize):
+        NewSprite.__init__(self, size_x, size_y)
+        self.group_sprite = fc.group_my_spritesheet(data, size_y, size_x, nb_sprite, sheetsize)
+        self.nb_sprite = nb_sprite
 
 
 class Contenu:
@@ -43,6 +80,7 @@ class Contenu:
                 
                 self.curseur_in = True
             else:
+
                 self.curseur_in = False
 
     def surbrillance(self):
@@ -59,90 +97,52 @@ class Contenu:
             return False
 
 
-class Spells:
-
-    def __init__(self):
-
-        self.mage_spells = ma.mage_spells
-        self.warlock_spells = ma.warlock_spells
-        self.warrior_spells = ma.warrior_spells
-
-
 class Character(NewSprite):
 
-    def __init__(self, data, sizex, sizey, nb_sprite, sheetsize, posy=0, posx=0):
+    def __init__(self, data, sizex, sizey, nb_sprite, sheetsize):
 
-        NewSprite.__init__(self, sizex, sizey, posx=0, posy=0, rect_x=0, rect_y=0)
-
-        self.group = fc.group_my_spritesheet(data, sizey, sizex, nb_sprite, sheetsize)
+        NewSprite.__init__(self, sizex, sizey)
+        self.group_sprite = fc.group_my_spritesheet(data, sizey, sizex, nb_sprite, sheetsize)
         self.nb_sprite = nb_sprite
-        self.x = 0  # variable qui change suivant la touche appuyé, défini le déplacement, de 5 pixel par sprite
-        self.y = 0  # gauche droite haut bas ( self.x =5 ou -5 self.y = 5 ou -5 )
-        self.posx = posx  # position actuel de mon personnage
-        self.posy = posy
-        self.sizex = sizex  # largeur du sprite ( du personnage à afficher )
-        self.sizey = sizey  # hauteur
-        self.dirty_rect = []  # dict de liste de rectangle contenant les positions des
-        # rectangles à afficher chaque liste contient 2 rectangles, à chaque déplacement le premier et supprimer
-        # un nouveau est affiché
-        self.hero = fc.load_hero()  # récupération des données de mon champion (seulement les données nécessaire)
-        desc = ma.panel[self.hero["Level"]-1]  # -1 à cause du décalage création d'un panel en fonction du niveau de mon
-        # personnage
-        self.stats = {"HP": desc["HP"][self.hero["Classes"]], "MP": desc["MP"][self.hero["Classes"]],  # je vais
-                      "Armor": desc["Armor"][self.hero["Classes"]]}  # chercher les données suivant le rôle ( Classes )
-        self.hp_bar = pg.Rect(self.x, self.y-10, int((self.stats["HP"] / desc["HP"][self.hero["Classes"]]) * 30), 6)
-        # défini un rectangle pour ma barre de vie (HP actuelle / HP de mon Char full HP * taille du rectangle en pixel)
-        self.index = 0
-        self.key = pg.key
+        self.hero = fc.load_hero()  # recover champion 's data
+        self.desc = ma.panel[self.hero["Level"]-1]  # -1 because of a shift in the panel
+        self.stats = {"HP": self.desc["HP"][self.hero["Classes"]], "MP": self.desc["MP"][self.hero["Classes"]],
+                      "Armor": self.desc["Armor"][self.hero["Classes"]]}  # fetch data according to the champion's role
+        self.hp_bar = pg.Rect(self.posx, self.posy-10, int((self.stats["HP"] / self.desc["HP"][self.hero["Classes"]]) *
+                                                           30), 6)
+        # create a rectangle for the character's HP (( current HP / FULL HP) * SIZE_IN_PIXEL)
 
-    def update_character(self, screen, color, i):
-        """Update_character permet le déplacement de notre personnage screen = la fenêtre où on affiche
-           color = la couleur qu'on veut afficher et index = l'index à récupérer dans notre groupe"""
+    def update_character(self, screen, color, i=0):
 
-        self.dirty_rect.append(self.rect)  # On ajoute les nouveaux rectangle
         self.dirty_rect.append(self.hp_bar)
-        print(len(self.rect))
-        print(self.dirty_rect)
-        screen.fill(color)
-
-        sprite = self.group[i][self.index]
-
-        self.posx += self.x  # on ajoute à la position actuelle le déplacement
-        self.posy += self.y
-
-        self.rect = pg.Rect(self.posx, self.posy, self.sizex, self.sizey)  # Déplacement du rectangle
-        self.hp_bar = pg.Rect(self.posx, self.posy-10, int((self.stats["HP"] /
-                                                            ma.panel[self.hero["Level"]-1]["HP"]
-                                                            [self.hero["Classes"]]) * 30), 6)
-
-        screen.blit(sprite.image, self.rect)  # on affiche l'image de notre sprite sur la position du rectangle
-        pg.draw.rect(screen, (255, 0, 0), self.hp_bar)  # on dessine notre bar de vie
-        print(self.rect)
-        self.dirty_rect.append(self.rect)  # on ajoute les rectangles afficher à nos liste
+        self.update_sprite(screen, color, self.nb_sprite, self.group_sprite, i)  # Call to update the character'sprite
+        self.hp_bar = pg.Rect(self.posx, self.posy-10, int((self.stats["HP"] / self.desc["HP"][self.hero["Classes"]]) * 30), 6)
+        pg.draw.rect(screen, (255, 0, 0), self.hp_bar)  # Draw : (Where, Color, What)
         self.dirty_rect.append(self.hp_bar)
-
-        if self.index == self.nb_sprite-1:
-            self.index = 0
-        else:
-            self.index += 1
-
-        self.x = 0  # On remets nos déplacement à 0
-        self.y = 0
+        pg.display.update(self.dirty_rect)
+        self.dirty_rect.clear()
+        pg.event.clear()
 
 
 class Player(Character):
 
     def __init__(self, data, sizex, sizey, nb_sprite, sheetsize):
 
-        Character.__init__(self, data, sizex, sizey, nb_sprite, sheetsize, posx=0, posy=0)
+        Character.__init__(self, data, sizex, sizey, nb_sprite, sheetsize)
+        self.spells_available = fc.spells_available(self.hero["Classes"], self.hero["Level"])  # Input : player's role
+        # and player's level, output : Dictionary {"SPELL' S NAME": SPELLSNAME   LEVEL    DAMAGE}
+
+    def cast_spell(self, spell, screen):
+
+        spell.update_sprite(screen, (255, 255, 255), spell.nb_sprite, spell.group_sprite)
 
 
 class Enemy(Character):
 
     def __init__(self, data, sizex, sizey, nb_sprite, sheetsize, posy=0):
 
-        Character.__init__(self, data, sizex, sizey, nb_sprite, sheetsize,  posy, posx=0)
+        Character.__init__(self, data, sizex, sizey, nb_sprite, sheetsize)
         self.hero["Classes"] = "Monster"
-        desc = ma.panel[self.hero["Level"]-1]  # Mise à jour des attributs, nouveau panale car il s'est initialisé avec
-        self.stats = {"HP": desc["HP"][self.hero["Classes"]], "MP": desc["MP"][self.hero["Classes"]],  # un autre rôle
+        desc = ma.panel[self.hero["Level"]-1]  # Update attribut for the monster
+        self.stats = {"HP": desc["HP"][self.hero["Classes"]], "MP": desc["MP"][self.hero["Classes"]],
                       "Armor": desc["Armor"][self.hero["Classes"]]}
