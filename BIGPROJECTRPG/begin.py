@@ -9,16 +9,15 @@ import os
 os.chdir("/home/martin/Documents/gitproject")
 
 pg.init()
-taille_fenêtre = (800, 400)
-screen_m = pg.display.set_mode(taille_fenêtre)
+screen_size = (800, 400)
+screen_m = pg.display.set_mode(screen_size)
 player = ac.Player("BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256)
 enemy = ac.Enemy("BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256, posy=50)
-fireball = ac.Spell("BIGPROJECTRPG/image/Fireball.png", 16, 16, 6, 16)
 game = True
 gamemenu = True
 pg.key.set_repeat(20, 20)
-play = ac.Contenu("PLAY", 50, (255, 255, 255), taille_fenêtre)
-quitt = ac.Contenu("QUIT", 50, (255, 255, 255), taille_fenêtre, y=50)
+play = ac.Contenu("PLAY", 50, (255, 255, 255), screen_size)
+quitt = ac.Contenu("QUIT", 50, (255, 255, 255), screen_size, y=50)
 menu = [play, quitt]
 clock = pg.time.Clock()
 
@@ -55,8 +54,11 @@ while gamemenu:
 
 screen_m.fill((255, 255, 255))
 pg.display.flip()
-
-
+group_spells = pg.sprite.Group()
+index = 0
+time = 0
+x = 0
+y = 0
 while game:
 
     event = pg.event.poll()
@@ -68,54 +70,59 @@ while game:
     if event.type == pg.KEYDOWN:
 
         if event.key == pg.K_DOWN:
-            player.y = 5
-            player.key = pg.K_DOWN
-            player.update_character(screen_m, (255, 255, 255), 0)
+
+            index = 0
+            player.move(y=5)
+            y = 5
+            x = 0
 
         elif event.key == pg.K_UP:
 
-            player.y = -5
-            player.key = pg.K_UP
-            player.update_character(screen_m, (255, 255, 255), 1)
+            index = 1
+            player.move(y=-5)
+            y = -5
+            x = 0
 
         elif event.key == pg.K_RIGHT:
-            player.x = 5
-            player.key = pg.K_RIGHT
-            player.update_character(screen_m, (255, 255, 255), 2)
+
+            index = 2
+            player.move(x=5)
+            x = 5
+            y = 0
 
         elif event.key == pg.K_LEFT:
 
-            player.x = -5
-            player.key = pg.K_LEFT
-            player.update_character(screen_m, (255, 255, 255), 3)
+            index = 3
+            player.move(x=-5)
+            x = -5
+            y = 0
 
         elif event.key == pg.K_a:
 
-            fireball.x = 10
-            fireball.key = pg.K_a
-            player.cast_spell(fireball, screen_m)
+            newspell = player.cast_spell("BIGPROJECTRPG/image/Fireball.png", 16, 16, 6, 16, x, y)
 
-    elif event.type == pg.KEYUP:
+            if newspell.time_to_cast:
+                ac.Spell.spell_time = pg.time.get_ticks()
+                group_spells.add(newspell)
+            player.index = player.nb_sprite - 1
+
+    else:
 
         player.index = player.nb_sprite - 1
 
-        if player.key == pg.K_DOWN:
+    if len(group_spells) is not 0:
+        for spell in group_spells:
 
-            player.update_character(screen_m, (255, 255, 255), 0)
+            spell.update_spell(screen_m, (255, 255, 255))
+            the_bool = fc.outbound(screen_size[0], screen_size[1], spell.posx, spell.posy, spell.sizex, spell.sizey)
 
-        elif player.key == pg.K_UP:
+            if the_bool:
 
-            player.update_character(screen_m, (255, 255, 255), 1)
+                group_spells.remove(spell)
 
-        elif player.key == pg.K_RIGHT:
-
-            player.update_character(screen_m, (255, 255, 255), 2)
-
-        elif player.key == pg.K_LEFT:
-
-            player.update_character(screen_m, (255, 255, 255), 3)
-
-    clock.tick(60)
+    player.update_character(screen_m, (255, 255, 255), index)
+    clock.tick(40)
+    time -= 1
 
 
 

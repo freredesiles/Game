@@ -2,6 +2,7 @@ import pygame as pg
 import random as rd
 import manage as ma
 import fonctions as fc
+import time
 
 
 class NewSprite(pg.sprite.Sprite):
@@ -11,8 +12,6 @@ class NewSprite(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
         self.rect = pg.Rect(posx, posy, rect_x, rect_y)  # Initialise the rectangle location
         self.image = pg.Surface((size_x, size_y))  # Initialise a rectangle Surface
-        self.x = 0  # Variable which change according to the key pressed +- 5 pixel
-        self.y = 0
         self.posx = posx  # Current sprite position
         self.posy = posy
         self.sizex = size_x  # Sprite width
@@ -22,6 +21,7 @@ class NewSprite(pg.sprite.Sprite):
         self.key = pg.key
 
     def sprite_from_sheet(self, data, x, y, sprite_wh, sprite_ht):
+
         sheet = pg.image.load(data).convert_alpha()
         rectangle = pg.Rect(x, y, sprite_wh, sprite_ht)  # Defini le rectangle ou chercher l'image & taille qu'il fait
         sheet.set_clip(rectangle)
@@ -33,15 +33,12 @@ class NewSprite(pg.sprite.Sprite):
         self.dirty_rect.append(self.rect)
         screen.fill(color)
         sprite = group_sprite[i][self.index]  # i = which group of sprite, self.index = current sprite's state
-        self.posx += self.x
-        self.posy += self.y
         self.rect = pg.Rect(self.posx, self.posy, self.sizex, self.sizey)
         screen.blit(sprite.image, self.rect)
         self.dirty_rect.append(self.rect)
         pg.display.update(self.dirty_rect)
         self.dirty_rect.clear()
-        self.x = 0
-        self.y = 0
+
         if self.index == nb_sprite-1:
 
             self.index = 0
@@ -49,13 +46,43 @@ class NewSprite(pg.sprite.Sprite):
 
             self.index += 1
 
+    def move(self, x=0, y=0):
+
+        self.posx += x
+        self.posy += y
+
 
 class Spell(NewSprite):
 
-    def __init__(self, data, size_x, size_y, nb_sprite, sheetsize):
-        NewSprite.__init__(self, size_x, size_y)
-        self.group_sprite = fc.group_my_spritesheet(data, size_y, size_x, nb_sprite, sheetsize)
+    spell_time = pg.time.get_ticks()
+
+    def __init__(self, data, size_x, size_y, nb_sprite, sheet_height, posx, posy, x, y, cooldown=1000):
+
+        NewSprite.__init__(self, size_x, size_y, posx, posy)
+        self.group_sprite = fc.group_my_spritesheet(data, size_y, size_x, nb_sprite, sheet_height)
         self.nb_sprite = nb_sprite
+        self.direction_x = x*4
+        self.direction_y = y*4
+        self.cooldown = cooldown
+        self.time_to_cast = False
+        self._cooldown()
+
+    def update_spell(self, screen, color, i=0):
+
+        self.move(self.direction_x, self.direction_y)
+        self.update_sprite(screen, color, self.nb_sprite, self.group_sprite, i)
+
+    def _cooldown(self):
+
+        now = pg.time.get_ticks()
+
+        if now - Spell.spell_time >= self.cooldown:
+
+            self.time_to_cast = True
+
+        else:
+
+            self.time_to_cast = False
 
 
 class Contenu:
@@ -126,22 +153,24 @@ class Character(NewSprite):
 
 class Player(Character):
 
-    def __init__(self, data, sizex, sizey, nb_sprite, sheetsize):
+    def __init__(self, data, sizex, sizey, nb_sprite, sheet_height):
 
-        Character.__init__(self, data, sizex, sizey, nb_sprite, sheetsize)
+        Character.__init__(self, data, sizex, sizey, nb_sprite, sheet_height)
         self.spells_available = fc.spells_available(self.hero["Classes"], self.hero["Level"])  # Input : player's role
         # and player's level, output : Dictionary {"SPELL' S NAME": SPELLSNAME   LEVEL    DAMAGE}
 
-    def cast_spell(self, spell, screen):
+    def cast_spell(self, data, size_x, size_y, nb_sprite, sheet_height, x, y):
 
-        spell.update_sprite(screen, (255, 255, 255), spell.nb_sprite, spell.group_sprite)
+        spell = Spell(data, size_x, size_y, nb_sprite, sheet_height, self.posx, self.posy, x, y)
+
+        return spell
 
 
 class Enemy(Character):
 
-    def __init__(self, data, sizex, sizey, nb_sprite, sheetsize, posy=0):
+    def __init__(self, data, sizex, sizey, nb_sprite, sheet_height, posy=0):
 
-        Character.__init__(self, data, sizex, sizey, nb_sprite, sheetsize)
+        Character.__init__(self, data, sizex, sizey, nb_sprite, sheet_height)
         self.hero["Classes"] = "Monster"
         desc = ma.panel[self.hero["Level"]-1]  # Update attribut for the monster
         self.stats = {"HP": desc["HP"][self.hero["Classes"]], "MP": desc["MP"][self.hero["Classes"]],

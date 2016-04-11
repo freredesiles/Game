@@ -70,3 +70,12 @@ def group_my_spritesheet(data, sprite_height, sprite_width, nb_sprite, sheet_hei
         list_group_sprite.append(groupe)
 
     return list_group_sprite
+
+
+def outbound(screen_x, screen_y, posx, posy, sprite_x, sprite_y):
+
+    if posx > screen_x or posx < 0-sprite_x or posy > screen_y or posy < 0-sprite_y:
+
+        return True
+
+    return False
