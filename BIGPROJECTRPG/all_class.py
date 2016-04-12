@@ -54,9 +54,9 @@ class NewSprite(pg.sprite.Sprite):
 
 class Spell(NewSprite):
 
-    spell_time = pg.time.get_ticks()
+    spell_time = {"Fireball": pg.time.get_ticks()}
 
-    def __init__(self, data, size_x, size_y, nb_sprite, sheet_height, posx, posy, x, y, cooldown=1000):
+    def __init__(self, data, size_x, size_y, nb_sprite, sheet_height, posx, posy, x, y, name, damage, cooldown=1000):
 
         NewSprite.__init__(self, size_x, size_y, posx, posy)
         self.group_sprite = fc.group_my_spritesheet(data, size_y, size_x, nb_sprite, sheet_height)
@@ -64,25 +64,32 @@ class Spell(NewSprite):
         self.direction_x = x*4
         self.direction_y = y*4
         self.cooldown = cooldown
+        self.damage = damage
         self.time_to_cast = False
-        self._cooldown()
+        self._cooldown(name)
 
     def update_spell(self, screen, color, i=0):
 
         self.move(self.direction_x, self.direction_y)
         self.update_sprite(screen, color, self.nb_sprite, self.group_sprite, i)
 
-    def _cooldown(self):
+    def _cooldown(self, name):
 
         now = pg.time.get_ticks()
 
-        if now - Spell.spell_time >= self.cooldown:
+        if now - Spell.spell_time[name] >= self.cooldown:
 
             self.time_to_cast = True
 
         else:
 
             self.time_to_cast = False
+
+    def spell_collide(self, sprite_collided):
+
+        if issubclass(type(sprite_collided), Character):
+
+            sprite_collided.defence(self.damage)
 
 
 class Contenu:
@@ -126,9 +133,9 @@ class Contenu:
 
 class Character(NewSprite):
 
-    def __init__(self, data, sizex, sizey, nb_sprite, sheetsize):
+    def __init__(self, data, sizex, sizey, nb_sprite, sheetsize, posx=0, posy=0):
 
-        NewSprite.__init__(self, sizex, sizey)
+        NewSprite.__init__(self, sizex, sizey, posx, posy)
         self.group_sprite = fc.group_my_spritesheet(data, sizey, sizex, nb_sprite, sheetsize)
         self.nb_sprite = nb_sprite
         self.hero = fc.load_hero()  # recover champion 's data
@@ -150,27 +157,31 @@ class Character(NewSprite):
         self.dirty_rect.clear()
         pg.event.clear()
 
+    def defence(self, damage):
+
+        self.stats["HP"] -= damage
+
 
 class Player(Character):
 
-    def __init__(self, data, sizex, sizey, nb_sprite, sheet_height):
+    def __init__(self, data, sizex, sizey, nb_sprite, sheet_height, posx=0, posy=0):
 
-        Character.__init__(self, data, sizex, sizey, nb_sprite, sheet_height)
+        Character.__init__(self, data, sizex, sizey, nb_sprite, sheet_height, posx, posy)
         self.spells_available = fc.spells_available(self.hero["Classes"], self.hero["Level"])  # Input : player's role
         # and player's level, output : Dictionary {"SPELL' S NAME": SPELLSNAME   LEVEL    DAMAGE}
 
-    def cast_spell(self, data, size_x, size_y, nb_sprite, sheet_height, x, y):
+    def cast_spell(self, data, size_x, size_y, nb_sprite, sheet_height, x, y, name, damage):
 
-        spell = Spell(data, size_x, size_y, nb_sprite, sheet_height, self.posx, self.posy, x, y)
+        spell = Spell(data, size_x, size_y, nb_sprite, sheet_height, self.posx, self.posy, x, y, name, damage)
 
         return spell
 
 
 class Enemy(Character):
 
-    def __init__(self, data, sizex, sizey, nb_sprite, sheet_height, posy=0):
+    def __init__(self, data, sizex, sizey, nb_sprite, sheet_height, posx=0, posy=0):
 
-        Character.__init__(self, data, sizex, sizey, nb_sprite, sheet_height)
+        Character.__init__(self, data, sizex, sizey, nb_sprite, sheet_height, posx, posy)
         self.hero["Classes"] = "Monster"
         desc = ma.panel[self.hero["Level"]-1]  # Update attribut for the monster
         self.stats = {"HP": desc["HP"][self.hero["Classes"]], "MP": desc["MP"][self.hero["Classes"]],

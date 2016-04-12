@@ -79,3 +79,7 @@ def outbound(screen_x, screen_y, posx, posy, sprite_x, sprite_y):
         return True
 
     return False
+
+
+
+

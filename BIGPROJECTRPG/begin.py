@@ -12,7 +12,7 @@ pg.init()
 screen_size = (800, 400)
 screen_m = pg.display.set_mode(screen_size)
 player = ac.Player("BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256)
-enemy = ac.Enemy("BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256, posy=50)
+enemy = ac.Enemy("BIGPROJECTRPG/image/Roman.png", 32, 64, 8, 256, posx=200)
 game = True
 gamemenu = True
 pg.key.set_repeat(20, 20)
@@ -56,13 +56,14 @@ screen_m.fill((255, 255, 255))
 pg.display.flip()
 group_spells = pg.sprite.Group()
 index = 0
-time = 0
 x = 0
 y = 0
+list_sprite = [enemy]
+
 while game:
 
     event = pg.event.poll()
-
+    enemy.move(y=1)
     if event.type == pg.QUIT:
 
         game = False
@@ -73,7 +74,7 @@ while game:
 
             index = 0
             player.move(y=5)
-            y = 5
+            y = 5  # Used for the spells'move
             x = 0
 
         elif event.key == pg.K_UP:
@@ -99,10 +100,11 @@ while game:
 
         elif event.key == pg.K_a:
 
-            newspell = player.cast_spell("BIGPROJECTRPG/image/Fireball.png", 16, 16, 6, 16, x, y)
+            newspell = player.cast_spell("BIGPROJECTRPG/image/Fireball.png", 16, 16, 6, 16, x, y, "Fireball", 30)
 
             if newspell.time_to_cast:
-                ac.Spell.spell_time = pg.time.get_ticks()
+
+                ac.Spell.spell_time["Fireball"] = pg.time.get_ticks()
                 group_spells.add(newspell)
             player.index = player.nb_sprite - 1
 
@@ -112,17 +114,27 @@ while game:
 
     if len(group_spells) is not 0:
         for spell in group_spells:
-
+            the_bool2 = False
             spell.update_spell(screen_m, (255, 255, 255))
             the_bool = fc.outbound(screen_size[0], screen_size[1], spell.posx, spell.posy, spell.sizex, spell.sizey)
 
-            if the_bool:
+            for sprite in list_sprite:
+
+                the_bool2 = pg.sprite.collide_rect(sprite, spell)
+
+                if the_bool2:  # Collision, break the loop
+
+                    spell.spell_collide(sprite)
+                    break
+
+            if the_bool or the_bool2:  # Collision or outbound, remove the spell from the screen
 
                 group_spells.remove(spell)
-
+    enemy.update_character(screen_m, (255, 255, 255), 0)
     player.update_character(screen_m, (255, 255, 255), index)
     clock.tick(40)
-    time -= 1
+
+
 
 
 
