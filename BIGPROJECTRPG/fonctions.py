@@ -81,5 +81,84 @@ def outbound(screen_x, screen_y, posx, posy, sprite_x, sprite_y):
     return False
 
 
+def erase_rect(screen, color, rect):
+
+    screen.fill(color)
+    pg.display.update(rect)
+
+
+def check_alive(sprite_list, screen, background):
+
+    for sprite in sprite_list:
+
+        if issubclass(type(sprite), ac.Character):
+            if not sprite.alive:
+                erase_rect(screen, background, sprite.rect)
+                sprite_list.remove(sprite)
+
+    return sprite_list
+
+
+def update_sprite(list_sprite_screen, screen, background, index):
+
+    if len(list_sprite_screen) is not 0:
+        for sprite in list_sprite_screen:
+            if isinstance(sprite, ac.Player):
+                sprite.update_character(screen, background, index)
+
+            elif isinstance(sprite, ac.Spell):
+
+                sprite.update_spell(screen, background)
+
+            elif isinstance(sprite, ac.Enemy):
+
+                sprite.update_character(screen, background, 0)
+
+
+def sprite_collision(list_sprite_screen, screen, background):
+
+    new_sprite_liste = list_sprite_screen[:]
+
+    if len(list_sprite_screen) is not 0:
+        for i, sprite1 in enumerate(list_sprite_screen):
+            for j, sprite2 in enumerate(list_sprite_screen):
+                if j > i:
+
+                    collision = pg.Rect.colliderect(sprite1.rect, sprite2.rect)
+
+                    if collision:
+
+                        new_sprite_liste = filtre(sprite1, sprite2, screen, background, list_sprite_screen)
+
+    return new_sprite_liste
+
+
+def filtre(sprite1, sprite2, screen, background, list_sprite_screen):
+
+    if issubclass(type(sprite1), ac.Character):
+
+        list_sprite_screen = collision_with(sprite1, sprite2, list_sprite_screen, screen, background)
+
+    elif issubclass(type(sprite2), ac.Character):
+
+        list_sprite_screen = collision_with(sprite2, sprite1, list_sprite_screen, screen, background)
+
+    return list_sprite_screen
+
+
+def collision_with(sprite_char, sprite, list_sprite_screen, screen, background):
+
+    if type(sprite) == ac.Spell and sprite.who_cast is not sprite_char:
+
+        sprite_char.defence(sprite)
+        list_sprite_screen.remove(sprite)
+        erase_rect(screen, background, sprite.rect)
+
+    return list_sprite_screen
+
+
+
+
+
 
 

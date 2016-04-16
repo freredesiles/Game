@@ -7,10 +7,10 @@ import time
 
 class NewSprite(pg.sprite.Sprite):
 
-    def __init__(self, size_x, size_y, posx=0, posy=0, rect_x=0, rect_y=0):
+    def __init__(self, size_x, size_y, posx=0, posy=0):
 
         pg.sprite.Sprite.__init__(self)
-        self.rect = pg.Rect(posx, posy, rect_x, rect_y)  # Initialise the rectangle location
+        self.rect = pg.Rect(posx, posy, size_x, size_y)  # Initialise the rectangle location
         self.image = pg.Surface((size_x, size_y))  # Initialise a rectangle Surface
         self.posx = posx  # Current sprite position
         self.posy = posy
@@ -55,8 +55,10 @@ class NewSprite(pg.sprite.Sprite):
 class Spell(NewSprite):
 
     spell_time = {"Fireball": pg.time.get_ticks()}
+    time_to_cast = True
 
-    def __init__(self, data, size_x, size_y, nb_sprite, sheet_height, posx, posy, x, y, name, damage, cooldown=1000):
+    def __init__(self, data, size_x, size_y, nb_sprite, sheet_height, posx, posy, x, y, name, damage, who_cast,
+                 cooldown=1000):
 
         NewSprite.__init__(self, size_x, size_y, posx, posy)
         self.group_sprite = fc.group_my_spritesheet(data, size_y, size_x, nb_sprite, sheet_height)
@@ -65,8 +67,8 @@ class Spell(NewSprite):
         self.direction_y = y*4
         self.cooldown = cooldown
         self.damage = damage
-        self.time_to_cast = False
-        self._cooldown(name)
+        self.who_cast = who_cast
+        Spell.time_to_cast = self._cooldown(name)
 
     def update_spell(self, screen, color, i=0):
 
@@ -75,19 +77,19 @@ class Spell(NewSprite):
 
     def _cooldown(self, name):
 
-        now = pg.time.get_ticks()
+        now = pg.time.get_ticks()  # get time
 
-        if now - Spell.spell_time[name] >= self.cooldown:
+        if now - Spell.spell_time[name] >= self.cooldown:  # check the difference between now and last cast
 
-            self.time_to_cast = True
+            return True
 
         else:
 
-            self.time_to_cast = False
+            return False
 
     def spell_collide(self, sprite_collided):
 
-        if issubclass(type(sprite_collided), Character):
+        if issubclass(type(sprite_collided), Character):  # Check if the sprite collided is a character
 
             sprite_collided.defence(self.damage)
 
@@ -145,6 +147,7 @@ class Character(NewSprite):
         self.hp_bar = pg.Rect(self.posx, self.posy-10, int((self.stats["HP"] / self.desc["HP"][self.hero["Classes"]]) *
                                                            30), 6)
         # create a rectangle for the character's HP (( current HP / FULL HP) * SIZE_IN_PIXEL)
+        self.alive = True
 
     def update_character(self, screen, color, i=0):
 
@@ -157,9 +160,15 @@ class Character(NewSprite):
         self.dirty_rect.clear()
         pg.event.clear()
 
-    def defence(self, damage):
+    def defence(self, spell):
 
-        self.stats["HP"] -= damage
+        self.stats["HP"] -= spell.damage
+
+        if self.stats["HP"] <= 0:
+
+            self.alive = False
+
+        return self.alive
 
 
 class Player(Character):
@@ -170,9 +179,9 @@ class Player(Character):
         self.spells_available = fc.spells_available(self.hero["Classes"], self.hero["Level"])  # Input : player's role
         # and player's level, output : Dictionary {"SPELL' S NAME": SPELLSNAME   LEVEL    DAMAGE}
 
-    def cast_spell(self, data, size_x, size_y, nb_sprite, sheet_height, x, y, name, damage):
+    def cast_spell(self, data, size_x, size_y, nb_sprite, sheet_height, x, y, name, damage, who_cast):
 
-        spell = Spell(data, size_x, size_y, nb_sprite, sheet_height, self.posx, self.posy, x, y, name, damage)
+        spell = Spell(data, size_x, size_y, nb_sprite, sheet_height, self.posx, self.posy, x, y, name, damage, who_cast)
 
         return spell
 
